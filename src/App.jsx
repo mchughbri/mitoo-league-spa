@@ -39,7 +39,7 @@ function App() {
                 {rows[0].map((cell, i) => (
                   <th
                     key={i}
-                    className="py-2 sm:py-3 px-2 sm:px-4 text-left font-semibold uppercase tracking-wide whitespace-nowrap"
+                    className="py-2 sm:py-3 px-2 sm:px-4 text-left font-semibold tracking-wide whitespace-nowrap"
                   >
                     {cell}
                   </th>
