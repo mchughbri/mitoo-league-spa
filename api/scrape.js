@@ -9,7 +9,9 @@ export default async function handler(req, res) {
     const $ = cheerio.load(html);
 
     const rows = [];
-    $("table tr").each((_, el) => {
+
+    // Only target the leagueTable
+    $("table.leagueTable tr").each((_, el) => {
       const cells = $(el)
         .find("td, th")
         .map((i, td) => $(td).text().trim())
