@@ -4,46 +4,95 @@ function App() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Column renaming map
+  const headerMap = {
+    "Games Played": "Pl",
+    "Played": "Pl",
+    "Won": "W",
+    "Drawn": "D",
+    "Lost": "L",
+    "Goals For": "GF",
+    "Goals Against": "GA",
+    "Goal Difference": "GD",
+    "Points": "Pts",
+  };
+
   useEffect(() => {
     fetch("/api/scrape")
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setRows(data.rows);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
+  // Helper: determine stripe colour based on league position
+  const getStripeClass = (position, totalTeams) => {
+    if (position === 1) return "bg-green-500"; // champion
+    if (position === 2 || position === 3) return "bg-blue-500"; // promotion
+    if (position >= totalTeams - 1) return "bg-red-500"; // bottom 2
+    return null;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center">
-        League Table
+    <div className="min-h-screen bg-gray-100 text-gray-900 p-4 sm:p-6">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center">
+        Division Table
       </h1>
 
       {loading && <p className="text-center">Loading table...</p>}
 
       {!loading && rows.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white rounded-2xl shadow-md">
-            <thead className="bg-gray-200">
+        <div className="overflow-x-auto max-w-full sm:max-w-4xl mx-auto">
+          <table className="w-full bg-white rounded-xl shadow-lg overflow-hidden text-sm sm:text-base">
+            {/* Table Head */}
+            <thead className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
               <tr>
                 {rows[0].map((cell, i) => (
-                  <th key={i} className="py-3 px-4 text-left font-semibold">
-                    {cell}
+                  <th
+                    key={i}
+                    className="py-2 sm:py-3 px-2 sm:px-4 text-left font-semibold uppercase tracking-wide whitespace-nowrap"
+                  >
+                    {headerMap[cell] || cell}
                   </th>
                 ))}
               </tr>
             </thead>
+
+            {/* Table Body */}
             <tbody>
-              {rows.slice(1).map((row, idx) => (
-                <tr key={idx} className="border-b hover:bg-gray-50">
-                  {row.map((cell, i) => (
-                    <td key={i} className="py-3 px-4">
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {rows.slice(1).map((row, idx) => {
+                const pos = parseInt(row[0], 10); // first cell should be league position
+                const stripeClass = getStripeClass(pos, rows.length - 1);
+
+                return (
+                  <tr
+                    key={idx}
+                    className={`relative ${
+                      idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+                    } hover:bg-gray-100`}
+                  >
+                    {/* Coloured tab if needed */}
+                    {stripeClass && (
+                      <td
+                        className={`absolute left-0 top-0 bottom-0 w-1 ${stripeClass} rounded-l-lg`}
+                      ></td>
+                    )}
+
+                    {row.map((cell, i) => (
+                      <td
+                        key={i}
+                        className={`py-2 sm:py-3 px-2 sm:px-4 text-gray-700 ${
+                          pos === 1 ? "font-bold" : "font-medium"
+                        }`}
+                      >
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -51,7 +100,7 @@ function App() {
 
       {!loading && rows.length === 0 && (
         <p className="text-center text-red-500">
-          Could not load table.
+          Could not load league table.
         </p>
       )}
     </div>
