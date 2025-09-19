@@ -14,12 +14,27 @@ function App() {
       .catch(() => setLoading(false));
   }, []);
 
-  // Stripe colour helper
+  // Coloured stripe helper (FotMob/Sky feel)
   const getStripeClass = (position, totalTeams) => {
-    if (position === 1) return "bg-green-500"; // leader
+    if (position === 1) return "bg-green-500";          // leader
     if (position === 2 || position === 3) return "bg-blue-500"; // promotion/playoff
     if (position >= totalTeams - 1) return "bg-red-500"; // bottom 2
     return null;
+  };
+
+  // Robust team-name cleaner: strips U7–U18, variants, and (U13) forms
+  const cleanTeamName = (name) => {
+    return name
+      // Remove bracketed age tags like (U13), [U13], {U13}, and variants
+      .replace(/[\(\[\{]\s*U\s*\d{1,2}[A-Za-z]?'?s?\s*[\)\]\}]/gi, "")
+      // Remove standalone U13/U 13/U13s/U13’s/U13A token
+      .replace(/\bU\s*\d{1,2}[A-Za-z]?'?s?\b/gi, "")
+      // Remove "Under 13" etc.
+      .replace(/\bUnder\s*\d{1,2}\b/gi, "")
+      // Collapse multiple spaces and tidy trailing hyphens/spaces
+      .replace(/\s{2,}/g, " ")
+      .replace(/\s*-\s*$/g, "")
+      .trim();
   };
 
   if (loading) {
@@ -38,27 +53,31 @@ function App() {
     );
   }
 
-  // Work with headers & data
+  // Headers & data
   const headers = rows[0];
   const dataRows = rows.slice(1);
 
-  // Find GF and GA column indexes
+  // Column indexes (robust to naming)
+  const teamIdx = headers.findIndex((h) => /team/i.test(h));
   const gfIndex = headers.indexOf("GF");
   const gaIndex = headers.indexOf("GA");
 
-  // Build new headers, merging GF/GA into "+/-"
-  const mergedHeaders = headers
-    .map((h, i) => {
-      if (i === gfIndex) return "+/-";
-      if (i === gaIndex) return null; // drop GA
-      return h;
-    })
-    .filter(Boolean);
+  // Build headers shown in UI: merge GF/GA into "+/-"
+  const mergedHeaders = (() => {
+    if (gfIndex === -1 || gaIndex === -1) return headers; // fallback if not found
+    return headers
+      .map((h, i) => {
+        if (i === gfIndex) return "+/-";
+        if (i === gaIndex) return null; // drop GA
+        return h;
+      })
+      .filter(Boolean);
+  })();
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 p-4 sm:p-6">
       <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center">
-        Division Table
+        MHL U13 Table
       </h1>
 
       <div className="overflow-x-auto max-w-full sm:max-w-4xl mx-auto">
@@ -90,19 +109,21 @@ function App() {
                     idx % 2 === 0 ? "bg-gray-50" : "bg-white"
                   } hover:bg-gray-100`}
                 >
-                  {/* Coloured tab for pos */}
+                  {/* Coloured tab for positions */}
                   {stripeClass && (
                     <td
                       className={`absolute left-0 top-0 bottom-0 w-1 ${stripeClass} rounded-l-lg`}
-                    ></td>
+                    />
                   )}
 
                   {row.map((cell, i) => {
-                    // Skip GA column (merged)
-                    if (i === gaIndex) return null;
+                    // Skip GA (merged)
+                    if (gaIndex !== -1 && i === gaIndex) return null;
 
                     // Merge GF/GA into "+/-"
-                    if (i === gfIndex) {
+                    if (gfIndex !== -1 && i === gfIndex) {
+                      const gf = row[gfIndex] ?? "";
+                      const ga = row[gaIndex] ?? "";
                       return (
                         <td
                           key={i}
@@ -110,17 +131,14 @@ function App() {
                             pos === 1 ? "font-bold" : "font-medium"
                           }`}
                         >
-                          {row[gfIndex]}-{row[gaIndex]}
+                          {gf}-{ga}
                         </td>
                       );
                     }
 
-                    // Clean up team names
-                    if (headers[i] === "Team") {
-                      const cleanTeam = cell
-                        .replace(/\bU\d{1,2}\b/gi, "") // remove U7–U18
-                        .replace(/\s{2,}/g, " ") // collapse spaces
-                        .trim();
+                    // Clean team names in the team column
+                    if (i === teamIdx && teamIdx !== -1) {
+                      const clean = cleanTeamName(String(cell));
                       return (
                         <td
                           key={i}
@@ -128,7 +146,7 @@ function App() {
                             pos === 1 ? "font-bold" : "font-medium"
                           }`}
                         >
-                          {cleanTeam}
+                          {clean}
                         </td>
                       );
                     }
