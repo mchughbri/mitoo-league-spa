@@ -14,8 +14,9 @@ function App() {
       .catch(() => setLoading(false));
   }, []);
 
+  // Stripe colour helper
   const getStripeClass = (position, totalTeams) => {
-    if (position === 1) return "bg-green-500"; // champion
+    if (position === 1) return "bg-green-500"; // leader
     if (position === 2 || position === 3) return "bg-blue-500"; // promotion/playoff
     if (position >= totalTeams - 1) return "bg-red-500"; // bottom 2
     return null;
@@ -37,7 +38,7 @@ function App() {
     );
   }
 
-  // Work with headers
+  // Work with headers & data
   const headers = rows[0];
   const dataRows = rows.slice(1);
 
@@ -49,7 +50,7 @@ function App() {
   const mergedHeaders = headers
     .map((h, i) => {
       if (i === gfIndex) return "+/-";
-      if (i === gaIndex) return null; // remove GA
+      if (i === gaIndex) return null; // drop GA
       return h;
     })
     .filter(Boolean);
@@ -62,12 +63,13 @@ function App() {
 
       <div className="overflow-x-auto max-w-full sm:max-w-4xl mx-auto">
         <table className="w-full bg-white rounded-xl shadow-lg overflow-hidden text-xs sm:text-sm md:text-base">
+          {/* Table Head */}
           <thead className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
             <tr>
               {mergedHeaders.map((cell, i) => (
                 <th
                   key={i}
-                  className="py-2 sm:py-3 px-2 sm:px-4 text-left font-semibold uppercase tracking-wide whitespace-nowrap"
+                  className="py-2 sm:py-3 px-2 sm:px-4 text-left font-semibold tracking-wide whitespace-nowrap"
                 >
                   {cell}
                 </th>
@@ -75,9 +77,10 @@ function App() {
             </tr>
           </thead>
 
+          {/* Table Body */}
           <tbody>
             {dataRows.map((row, idx) => {
-              const pos = parseInt(row[0], 10); // first col is position
+              const pos = parseInt(row[0], 10); // position is first column
               const stripeClass = getStripeClass(pos, dataRows.length);
 
               return (
@@ -87,7 +90,7 @@ function App() {
                     idx % 2 === 0 ? "bg-gray-50" : "bg-white"
                   } hover:bg-gray-100`}
                 >
-                  {/* Coloured tab */}
+                  {/* Coloured tab for pos */}
                   {stripeClass && (
                     <td
                       className={`absolute left-0 top-0 bottom-0 w-1 ${stripeClass} rounded-l-lg`}
@@ -95,7 +98,10 @@ function App() {
                   )}
 
                   {row.map((cell, i) => {
-                    if (i === gaIndex) return null; // skip GA
+                    // Skip GA column (merged)
+                    if (i === gaIndex) return null;
+
+                    // Merge GF/GA into "+/-"
                     if (i === gfIndex) {
                       return (
                         <td
@@ -108,6 +114,25 @@ function App() {
                         </td>
                       );
                     }
+
+                    // Clean up team names
+                    if (headers[i] === "Team") {
+                      const cleanTeam = cell
+                        .replace(/\bU\d{1,2}\b/gi, "") // remove U7–U18
+                        .replace(/\s{2,}/g, " ") // collapse spaces
+                        .trim();
+                      return (
+                        <td
+                          key={i}
+                          className={`py-2 sm:py-3 px-2 sm:px-4 text-gray-700 ${
+                            pos === 1 ? "font-bold" : "font-medium"
+                          }`}
+                        >
+                          {cleanTeam}
+                        </td>
+                      );
+                    }
+
                     return (
                       <td
                         key={i}
