@@ -26,11 +26,17 @@ export default async function handler(req, res) {
     $("table.leagueTable tr").each((rowIndex, el) => {
       const cells = $(el)
         .find("td, th")
-        .map((i, td) => $(td).text().trim().replace(/\s+/g, " "))
+        .map((i, td) => {
+          // Get text with <br> treated as space
+          let text = $(td).html() || "";
+          text = text.replace(/<br\s*\/?>/gi, " "); // replace <br> with space
+          text = $(text).text ? $(text).text() : text; // extract inner text if HTML
+          return text.replace(/\s+/g, " ").trim(); // normalise whitespace
+        })
         .get();
 
       if (cells.length > 0) {
-        // If it's the header row → map to short labels
+        // First row = headers → apply mapping
         if (rowIndex === 0) {
           rows.push(cells.map((c) => headerMap[c] || c));
         } else {
