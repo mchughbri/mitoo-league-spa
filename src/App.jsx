@@ -4,21 +4,6 @@ function App() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Column renaming map
-  const headerMap = {
-    "Games Played": "Pl",
-    "Played": "Pl",
-    "Won": "W",
-    "Drawn": "D",
-    "Lost": "L",
-    "Goals For": "GF",
-    "Goals Against": "GA",
-    "Goal Difference": "GD",
-    "Points": "Pts",
-    "Team Name": "Team",
-    "Position": "Pos",
-  };
-
   useEffect(() => {
     fetch("/api/scrape")
       .then((res) => res.json())
@@ -32,7 +17,7 @@ function App() {
   // Helper: determine stripe colour based on league position
   const getStripeClass = (position, totalTeams) => {
     if (position === 1) return "bg-green-500"; // champion
-    if (position === 2 || position === 3) return "bg-blue-500"; // promotion
+    if (position === 2 || position === 3) return "bg-blue-500"; // promotion/playoff
     if (position >= totalTeams - 1) return "bg-red-500"; // bottom 2
     return null;
   };
@@ -47,28 +32,25 @@ function App() {
 
       {!loading && rows.length > 0 && (
         <div className="overflow-x-auto max-w-full sm:max-w-4xl mx-auto">
-          <table className="w-full bg-white rounded-xl shadow-lg overflow-hidden text-sm sm:text-base">
+          <table className="w-full bg-white rounded-xl shadow-lg overflow-hidden text-xs sm:text-sm md:text-base">
             {/* Table Head */}
             <thead className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
               <tr>
-                {rows[0].map((cell, i) => {
-                  const label = headerMap[cell] || cell;
-                  return (
-                    <th
-                      key={i}
-                      className="py-2 sm:py-3 px-2 sm:px-4 text-left font-semibold uppercase tracking-wide whitespace-nowrap"
-                    >
-                      {label}
-                    </th>
-                  );
-                })}
+                {rows[0].map((cell, i) => (
+                  <th
+                    key={i}
+                    className="py-2 sm:py-3 px-2 sm:px-4 text-left font-semibold uppercase tracking-wide whitespace-nowrap"
+                  >
+                    {cell}
+                  </th>
+                ))}
               </tr>
             </thead>
 
             {/* Table Body */}
             <tbody>
               {rows.slice(1).map((row, idx) => {
-                const pos = parseInt(row[0], 10); // first cell should be league position
+                const pos = parseInt(row[0], 10); // league position = first column
                 const stripeClass = getStripeClass(pos, rows.length - 1);
 
                 return (

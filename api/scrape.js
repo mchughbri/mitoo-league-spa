@@ -8,15 +8,35 @@ export default async function handler(req, res) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    const rows = [];
+    const headerMap = {
+      "Position": "Pos",
+      "Team Name": "Team",
+      "Games Played": "Pl",
+      "Played": "Pl",
+      "Won": "W",
+      "Drawn": "D",
+      "Lost": "L",
+      "Goals For": "GF",
+      "Goals Against": "GA",
+      "Goal Difference": "GD",
+      "Points": "Pts",
+    };
 
-    // Only target the leagueTable
-    $("table.leagueTable tr").each((_, el) => {
+    const rows = [];
+    $("table.leagueTable tr").each((rowIndex, el) => {
       const cells = $(el)
         .find("td, th")
-        .map((i, td) => $(td).text().trim())
+        .map((i, td) => $(td).text().trim().replace(/\s+/g, " "))
         .get();
-      if (cells.length > 0) rows.push(cells);
+
+      if (cells.length > 0) {
+        // If it's the header row → map to short labels
+        if (rowIndex === 0) {
+          rows.push(cells.map((c) => headerMap[c] || c));
+        } else {
+          rows.push(cells);
+        }
+      }
     });
 
     res.setHeader("Access-Control-Allow-Origin", "*");
