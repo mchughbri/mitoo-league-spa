@@ -15,6 +15,8 @@ function App() {
     "Goals Against": "GA",
     "Goal Difference": "GD",
     "Points": "Pts",
+    "Team Name": "Team",
+    "Position": "Pos",
   };
 
   useEffect(() => {
@@ -49,14 +51,17 @@ function App() {
             {/* Table Head */}
             <thead className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
               <tr>
-                {rows[0].map((cell, i) => (
-                  <th
-                    key={i}
-                    className="py-2 sm:py-3 px-2 sm:px-4 text-left font-semibold uppercase tracking-wide whitespace-nowrap"
-                  >
-                    {headerMap[cell] || cell}
-                  </th>
-                ))}
+                {rows[0].map((cell, i) => {
+                  const label = headerMap[cell] || cell;
+                  return (
+                    <th
+                      key={i}
+                      className="py-2 sm:py-3 px-2 sm:px-4 text-left font-semibold uppercase tracking-wide whitespace-nowrap"
+                    >
+                      {label}
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
 
