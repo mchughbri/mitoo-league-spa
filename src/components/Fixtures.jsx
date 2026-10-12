@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { cleanTeamName } from "../utils/teamName";
+import StarIcon from "./StarIcon";
 
-function Fixtures() {
+function Fixtures({ favorites = [] }) {
   const [month, setMonth] = useState(null);
   const [monthName, setMonthName] = useState("");
   const [seasonMonths, setSeasonMonths] = useState([]);
@@ -36,6 +37,16 @@ function Fixtures() {
   const monthIndex = seasonMonths.indexOf(month);
   const canGoPrev = monthIndex > 0;
   const canGoNext = monthIndex !== -1 && monthIndex < seasonMonths.length - 1;
+
+  const isFavoriteMatch = (m) =>
+    favorites.includes(cleanTeamName(m.homeTeam)) ||
+    favorites.includes(cleanTeamName(m.awayTeam));
+
+  const favoriteMatches = fixtures.flatMap((day) =>
+    day.matches
+      .filter(isFavoriteMatch)
+      .map((m) => ({ ...m, date: day.date }))
+  );
 
   if (loading) {
     return (
@@ -73,6 +84,39 @@ function Fixtures() {
         </button>
       </div>
 
+      {favoriteMatches.length > 0 && (
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-4 ring-2 ring-yellow-400">
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-4 py-2 font-semibold text-sm sm:text-base flex items-center gap-2">
+            <StarIcon filled className="w-5 h-5" />
+            Favourites
+          </div>
+          <div className="divide-y divide-gray-100">
+            {favoriteMatches.map((m, i) => {
+              const played = m.homeScore !== "" && m.awayScore !== "";
+              return (
+                <div key={i} className="px-4 py-2">
+                  <div className="text-xs text-gray-400 mb-1">{m.date}</div>
+                  <div className="flex items-center justify-between text-xs sm:text-sm md:text-base">
+                    <span className="flex-1 text-right font-medium text-gray-700">
+                      {cleanTeamName(m.homeTeam)}
+                    </span>
+                    <span className="mx-3 px-2 py-1 rounded bg-gray-100 font-semibold text-gray-800 whitespace-nowrap">
+                      {played ? `${m.homeScore} - ${m.awayScore}` : m.time || "v"}
+                    </span>
+                    <span className="flex-1 text-left font-medium text-gray-700">
+                      {cleanTeamName(m.awayTeam)}
+                    </span>
+                    <span className="w-5 shrink-0 flex justify-center">
+                      <StarIcon filled className="w-4 h-4" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {fixtures.length === 0 ? (
         <div className="flex items-center justify-center py-16">
           <p className="text-gray-500">No fixtures scheduled for {monthName}.</p>
@@ -87,6 +131,7 @@ function Fixtures() {
               <div className="divide-y divide-gray-100">
                 {day.matches.map((m, j) => {
                   const played = m.homeScore !== "" && m.awayScore !== "";
+                  const fav = isFavoriteMatch(m);
                   return (
                     <div
                       key={j}
@@ -100,6 +145,9 @@ function Fixtures() {
                       </span>
                       <span className="flex-1 text-left font-medium text-gray-700">
                         {cleanTeamName(m.awayTeam)}
+                      </span>
+                      <span className="w-5 shrink-0 flex justify-center">
+                        {fav && <StarIcon filled className="w-4 h-4" />}
                       </span>
                     </div>
                   );

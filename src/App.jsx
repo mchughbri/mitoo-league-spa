@@ -1,9 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Fixtures from "./components/Fixtures";
 import LeagueTable from "./components/LeagueTable";
+import Settings from "./components/Settings";
+import { loadFavorites, saveFavorites } from "./utils/favorites";
 
 function App() {
   const [tab, setTab] = useState("fixtures");
+  const [favorites, setFavorites] = useState(() => loadFavorites());
+
+  useEffect(() => {
+    saveFavorites(favorites);
+  }, [favorites]);
+
+  const toggleFavorite = (team) => {
+    setFavorites((prev) =>
+      prev.includes(team) ? prev.filter((t) => t !== team) : [...prev, team]
+    );
+  };
 
   const tabClass = (name) =>
     `flex-1 py-2 sm:py-3 text-center font-semibold rounded-lg transition-colors ${
@@ -25,12 +38,20 @@ function App() {
         <button className={tabClass("table")} onClick={() => setTab("table")}>
           Table
         </button>
+        <button className={tabClass("settings")} onClick={() => setTab("settings")}>
+          Settings
+        </button>
       </div>
 
-      {tab === "fixtures" ? <Fixtures /> : <LeagueTable />}
+      {tab === "fixtures" && <Fixtures favorites={favorites} />}
+      {tab === "table" && <LeagueTable favorites={favorites} />}
+      {tab === "settings" && (
+        <Settings favorites={favorites} onToggleFavorite={toggleFavorite} />
+      )}
     </div>
   );
 }
 
 export default App;
+
 

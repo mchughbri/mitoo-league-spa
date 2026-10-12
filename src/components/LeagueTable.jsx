@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { cleanTeamName } from "../utils/teamName";
+import StarIcon from "./StarIcon";
 
-function LeagueTable() {
+function LeagueTable({ favorites = [] }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -109,6 +110,7 @@ function LeagueTable() {
 
                   if (i === teamIdx && teamIdx !== -1) {
                     const clean = cleanTeamName(String(cell));
+                    const isFavorite = favorites.includes(clean);
                     return (
                       <td
                         key={i}
@@ -116,7 +118,12 @@ function LeagueTable() {
                           pos === 1 ? "font-bold" : "font-medium"
                         }`}
                       >
-                        {clean}
+                        <span className="flex items-center gap-1.5">
+                          {clean}
+                          {isFavorite && (
+                            <StarIcon filled className="w-4 h-4 shrink-0" />
+                          )}
+                        </span>
                       </td>
                     );
                   }
