@@ -3,7 +3,7 @@ import * as cheerio from "cheerio";
 export default async function handler(req, res) {
   try {
     const response = await fetch(
-      "https://football.mitoo.co.uk/LeagueTab.cfm?TblName=Matches&DivisionID=856&LeagueCode=MHRML2025"
+      "https://mitoofootball.com/LeagueTab.cfm?TblName=Matches&DivisionID=623&LeagueCode=MHRML2026"
     );
     const html = await response.text();
     const $ = cheerio.load(html);
