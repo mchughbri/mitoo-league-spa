@@ -3,7 +3,13 @@ import * as cheerio from "cheerio";
 export default async function handler(req, res) {
   try {
     const response = await fetch(
-      "https://mitoofootball.com/LeagueTab.cfm?TblName=Matches&DivisionID=623&LeagueCode=MHRML2026"
+      "https://mitoofootball.com/LeagueTab.cfm?TblName=Matches&DivisionID=623&LeagueCode=MHRML2026",
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+        },
+      }
     );
     const html = await response.text();
     const $ = cheerio.load(html);
@@ -46,7 +52,10 @@ export default async function handler(req, res) {
     });
 
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.status(200).json({ rows });
+    res.status(200).json({
+      rows,
+      debug: { upstreamStatus: response.status, htmlLength: html.length },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch" });
