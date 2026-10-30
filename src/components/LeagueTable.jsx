@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { cleanTeamName } from "../utils/teamName";
 import StarIcon from "./StarIcon";
+import { TableSkeleton } from "./Skeleton";
+import EmptyState from "./EmptyState";
 
 function LeagueTable({ favorites = [] }) {
   const [rows, setRows] = useState([]);
@@ -25,19 +27,11 @@ function LeagueTable({ favorites = [] }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p>Loading table...</p>
-      </div>
-    );
+    return <TableSkeleton />;
   }
 
   if (rows.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-red-500">Could not load league table.</p>
-      </div>
-    );
+    return <EmptyState variant="error" message="Could not load league table." />;
   }
 
   const headers = rows[0];
@@ -50,8 +44,7 @@ function LeagueTable({ favorites = [] }) {
   // Build merged headers
   let mergedHeaders = headers
     .map((h, i) => {
-      if (i === gfIndex) return "+/-";
-      if (i === gaIndex) return null;
+      if (i === gfIndex || i === gaIndex) return null;
       if (/team/i.test(h)) return "Team"; // normalise "13 Teams" → "Team"
       if (/pos/i.test(h) || h === "Position") return "#"; // rename Pos → #
       return h;
@@ -60,7 +53,7 @@ function LeagueTable({ favorites = [] }) {
 
   return (
     <div className="overflow-x-auto max-w-full sm:max-w-4xl mx-auto">
-      <table className="w-full bg-white rounded-xl shadow-lg overflow-hidden text-xs sm:text-sm md:text-base">
+      <table className="w-full bg-white dark:bg-gray-800 shadow-card overflow-hidden text-xs sm:text-sm md:text-base">
         <thead className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
           <tr>
             {mergedHeaders.map((cell, i) => (
@@ -83,8 +76,8 @@ function LeagueTable({ favorites = [] }) {
               <tr
                 key={idx}
                 className={`relative ${
-                  idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-                } hover:bg-gray-100`}
+                  idx % 2 === 0 ? "bg-gray-50 dark:bg-gray-800" : "bg-white dark:bg-gray-800/60"
+                } hover:bg-gray-100 dark:hover:bg-gray-700`}
               >
                 {stripeClass && (
                   <td
@@ -93,20 +86,7 @@ function LeagueTable({ favorites = [] }) {
                 )}
 
                 {row.map((cell, i) => {
-                  if (i === gaIndex) return null;
-
-                  if (i === gfIndex) {
-                    return (
-                      <td
-                        key={i}
-                        className={`py-2 sm:py-3 px-2 sm:px-4 text-gray-700 ${
-                          pos === 1 ? "font-bold" : "font-medium"
-                        }`}
-                      >
-                        {row[gfIndex]}-{row[gaIndex]}
-                      </td>
-                    );
-                  }
+                  if (i === gaIndex || i === gfIndex) return null;
 
                   if (i === teamIdx && teamIdx !== -1) {
                     const clean = cleanTeamName(String(cell));
@@ -114,7 +94,7 @@ function LeagueTable({ favorites = [] }) {
                     return (
                       <td
                         key={i}
-                        className={`py-2 sm:py-3 px-2 sm:px-4 text-gray-700 ${
+                        className={`py-2 sm:py-3 px-2 sm:px-4 text-gray-700 dark:text-gray-200 ${
                           pos === 1 ? "font-bold" : "font-medium"
                         }`}
                       >
@@ -131,7 +111,7 @@ function LeagueTable({ favorites = [] }) {
                   return (
                     <td
                       key={i}
-                      className={`py-2 sm:py-3 px-2 sm:px-4 text-gray-700 ${
+                      className={`py-2 sm:py-3 px-2 sm:px-4 text-gray-700 dark:text-gray-200 ${
                         pos === 1 ? "font-bold" : "font-medium"
                       }`}
                     >
