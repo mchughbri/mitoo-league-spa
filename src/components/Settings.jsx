@@ -3,8 +3,9 @@ import { cleanTeamName } from "../utils/teamName";
 import StarIcon from "./StarIcon";
 import { ListSkeleton } from "./Skeleton";
 import EmptyState from "./EmptyState";
+import Switch from "./Switch";
 
-function Settings({ favorites, onToggleFavorite }) {
+function Settings({ favorites, onToggleFavorite, theme, onToggleTheme }) {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -44,7 +45,19 @@ function Settings({ favorites, onToggleFavorite }) {
   }
 
   return (
-    <div className="max-w-full sm:max-w-4xl mx-auto">
+    <div className="max-w-full sm:max-w-4xl mx-auto space-y-4">
+      <div className="bg-white dark:bg-gray-800 shadow-card overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white px-4 py-2 font-semibold text-sm sm:text-base">
+          Appearance
+        </div>
+        <div className="flex items-center justify-between px-4 py-3 min-h-[44px]">
+          <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-200">
+            Dark Mode
+          </span>
+          <Switch checked={theme === "dark"} onChange={onToggleTheme} />
+        </div>
+      </div>
+
       <div className="bg-white dark:bg-gray-800 shadow-card overflow-hidden">
         <div className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white px-4 py-2 font-semibold text-sm sm:text-base">
           Favourite Teams

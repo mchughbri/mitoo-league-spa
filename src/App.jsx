@@ -3,6 +3,7 @@ import Fixtures from "./components/Fixtures";
 import LeagueTable from "./components/LeagueTable";
 import Settings from "./components/Settings";
 import { loadFavorites, saveFavorites } from "./utils/favorites";
+import { getInitialTheme, applyTheme } from "./utils/theme";
 import { CalendarIcon, TableIcon, GearIcon } from "./components/NavIcons";
 import AppLogo from "./components/AppLogo";
 
@@ -15,10 +16,15 @@ const TABS = [
 function App() {
   const [tab, setTab] = useState("fixtures");
   const [favorites, setFavorites] = useState(() => loadFavorites());
+  const [theme, setTheme] = useState(() => getInitialTheme());
 
   useEffect(() => {
     saveFavorites(favorites);
   }, [favorites]);
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
 
   const toggleFavorite = (team) => {
     setFavorites((prev) =>
@@ -40,7 +46,12 @@ function App() {
           {tab === "fixtures" && <Fixtures favorites={favorites} />}
           {tab === "table" && <LeagueTable favorites={favorites} />}
           {tab === "settings" && (
-            <Settings favorites={favorites} onToggleFavorite={toggleFavorite} />
+            <Settings
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+              theme={theme}
+              onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+            />
           )}
         </div>
       </main>
