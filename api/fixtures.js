@@ -19,6 +19,42 @@ function resolveMonth(requested) {
   return SEASON_MONTHS[0];
 }
 
+// Each completed match is followed by a detail row listing goal scorers
+// (grouped under "H:"/"A:" labels, with a "(N)" suffix for multiple goals)
+// and up to two "star player" icons/names (one per team).
+function parseMatchDetails($, td) {
+  const homeScorers = [];
+  const awayScorers = [];
+  let homeStar = null;
+  let awayStar = null;
+  let section = null;
+
+  $(td)
+    .children()
+    .each((_, el) => {
+      const node = $(el);
+      if (node.is("span.pix10bold")) {
+        const label = node.text().replace(/\s+/g, " ").trim();
+        if (label.startsWith("H")) section = "home";
+        else if (label.startsWith("A")) section = "away";
+      } else if (node.is("span.pix10navy")) {
+        const name = node.text().replace(/\s+/g, " ").trim();
+        const src = node.prev("img").attr("src") || "";
+        if (src.includes("star_home")) homeStar = name;
+        else if (src.includes("star_away")) awayStar = name;
+      } else if (node.is("span")) {
+        const cls = node.attr("class") || "";
+        if (!cls.startsWith("pix10") || cls === "pix10bold") return;
+        const name = node.text().replace(/\s+/g, " ").trim().replace(/\s*\(/, " (");
+        if (!name) return;
+        if (section === "home") homeScorers.push(name);
+        else if (section === "away") awayScorers.push(name);
+      }
+    });
+
+  return { homeScorers, awayScorers, homeStar, awayStar };
+}
+
 export default async function handler(req, res) {
   try {
     const requested = parseInt(req.query?.month, 10);
@@ -38,6 +74,7 @@ export default async function handler(req, res) {
 
     const days = [];
     let current = null;
+    let lastMatch = null;
 
     $("table.white tr").each((_, el) => {
       const row = $(el);
@@ -49,6 +86,7 @@ export default async function handler(req, res) {
           current = { date: label, matches: [] };
           days.push(current);
         }
+        lastMatch = null;
         return;
       }
 
@@ -68,7 +106,29 @@ export default async function handler(req, res) {
           .trim();
 
         if (homeTeam && awayTeam) {
-          current.matches.push({ homeTeam, awayTeam, homeScore, awayScore, time });
+          const match = {
+            homeTeam,
+            awayTeam,
+            homeScore,
+            awayScore,
+            time,
+            homeScorers: [],
+            awayScorers: [],
+            homeStar: null,
+            awayStar: null,
+          };
+          current.matches.push(match);
+          lastMatch = match;
+        } else {
+          lastMatch = null;
+        }
+        return;
+      }
+
+      if (lastMatch) {
+        const detailTd = row.find('td[align="left"][colspan="2"]').first();
+        if (detailTd.length) {
+          Object.assign(lastMatch, parseMatchDetails($, detailTd));
         }
       }
     });
